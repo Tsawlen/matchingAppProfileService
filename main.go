@@ -27,5 +27,5 @@ func main() {
 	router.GET("/profile", query.GetAllProfiles)
 	router.GET("/profile/:id", query.GetProfileById)
 	router.PUT("/profile", addProfile)
-	router.Run("localhost:8080")
+	router.Run("0.0.0.0:8080")
 }
