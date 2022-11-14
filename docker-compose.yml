@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8080:8080
+    container_name: golang-profile-service
+    depends_on:
+      - database
+    environment:
+      - 'DB_PORT=3306'
+      - 'DB_HOST=database'
+  database:
+    image: mysql:5.7.22
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: golang_docker
+    container_name: profile-service-db
+    ports:
+      - 33066:3306
