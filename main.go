@@ -12,13 +12,10 @@ import (
 
 func addProfile(context *gin.Context) {
 	var newProfile dataStructures.Profile
-
 	if err := context.BindJSON(&newProfile); err != nil {
 		return
 	}
-
 	mockData.ProfileData = append(mockData.ProfileData, newProfile)
-
 	context.IndentedJSON(http.StatusCreated, newProfile)
 }
 
