@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	"app/matchingAppProfileService/common/dataStructures"
@@ -25,18 +23,14 @@ func addProfile(context *gin.Context) {
 }
 
 func main() {
-	db := database.InitalizeConnection()
+	go database.InitalizeConnection()
+
 	router := gin.Default()
 	router.GET("/profile", query.GetAllProfiles)
 	router.GET("/profile/:id", query.GetProfileById)
 	router.PUT("/profile", addProfile)
 	router.Run("0.0.0.0:8080")
-	_, err := db.Query("SELECT * FROM user")
 
-	if err != nil {
-		fmt.Println(err)
-		panic(errors.New("Error querying data"))
-	}
 	/*
 		for data.Next() {
 			var userData user

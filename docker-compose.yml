@@ -9,7 +9,8 @@ services:
       - 8080:8080
     container_name: golang-profile-service
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     environment:
       - 'DB_PORT=3306'
       - 'DB_HOST=database'
@@ -21,4 +22,8 @@ services:
       MYSQL_DATABASE: golang_docker
     container_name: profile-service-db
     ports:
-      - 33066:3306
+      - 3306:3306
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
