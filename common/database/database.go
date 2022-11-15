@@ -12,14 +12,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func InitalizeConnection() *sql.DB {
+func InitalizeConnection(dbChannel chan *sql.DB) *sql.DB {
 	db, err := sql.Open("mysql", "root:root@tcp(database:3306)/golang_docker")
 	if err != nil {
 		fmt.Println(err)
 		panic(errors.New("Error connecting to mysql"))
 	}
-	defer db.Close()
-
 	fmt.Println("Database connected!")
 
 	errPing := db.Ping()
@@ -28,6 +26,7 @@ func InitalizeConnection() *sql.DB {
 	}
 	createUserTable(db)
 	addMockData(db)
+	dbChannel <- db
 	return db
 }
 

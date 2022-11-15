@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
 
 	"app/matchingAppProfileService/common/dataStructures"
@@ -23,10 +24,15 @@ func addProfile(context *gin.Context) {
 }
 
 func main() {
-	go database.InitalizeConnection()
+	dbChannel := make(chan *sql.DB)
+	go database.InitalizeConnection(dbChannel)
+
+	db := <-dbChannel
+
+	defer db.Close()
 
 	router := gin.Default()
-	router.GET("/profile", query.GetAllProfiles)
+	router.GET("/profile", query.GetAllProfilesDB(db))
 	router.GET("/profile/:id", query.GetProfileById)
 	router.PUT("/profile", addProfile)
 	router.Run("0.0.0.0:8080")

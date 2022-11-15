@@ -15,4 +15,6 @@ type User struct {
 	Street      string `json:"street"`
 	HouseNumber string `json:"houseNumber"`
 	Username    string `json:"username"`
+	Created_at  string `json:"created_at"`
+	Updated_at  string `json:"updated_at"`
 }

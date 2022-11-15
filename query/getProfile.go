@@ -1,8 +1,10 @@
 package query
 
 import (
+	"app/matchingAppProfileService/common/crud"
 	"app/matchingAppProfileService/common/dataStructures"
 	"app/matchingAppProfileService/common/mockData"
+	"database/sql"
 	"errors"
 	"net/http"
 
@@ -16,6 +18,18 @@ func queryProfiles(id string) (*dataStructures.Profile, error) {
 		}
 	}
 	return &dataStructures.Profile{}, errors.New("profile not found!")
+}
+
+func GetAllProfilesDB(db *sql.DB) gin.HandlerFunc {
+	handler := func(context *gin.Context) {
+		users, err := crud.GetAllUsers(db)
+		if err != nil {
+			context.AbortWithStatus(http.StatusInternalServerError)
+		}
+		context.IndentedJSON(http.StatusOK, users)
+	}
+
+	return gin.HandlerFunc(handler)
 }
 
 func GetAllProfiles(context *gin.Context) {
