@@ -11,7 +11,7 @@ var ProfileData = []dataStructures.Profile{
 }
 
 var UserData = []dataStructures.User{
-	{Id: 1, City: "Homberg (Ohm)", Email: "jost-tomke-mueller@t-online.de",
+	{City: "Homberg (Ohm)", Email: "jost-tomke-mueller@t-online.de",
 		First_name: "Tomke", Name: "Müller", Password: "Test1234", Street: "Lichtenau", HouseNumber: "5",
 		Username: "Seyna"},
 }

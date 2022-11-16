@@ -6,51 +6,49 @@ import (
 	"fmt"
 	"log"
 
-	"app/matchingAppProfileService/common/crud"
+	"app/matchingAppProfileService/common/dataStructures"
+	"app/matchingAppProfileService/common/dbInterface"
 	"app/matchingAppProfileService/common/mockData"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-func InitalizeConnection(dbChannel chan *sql.DB) *sql.DB {
-	db, err := sql.Open("mysql", "root:root@tcp(database:3306)/golang_docker")
+func InitalizeConnection(dbChannel chan *sql.DB, gdbChannel chan *gorm.DB) *sql.DB {
+	dsn := "root:root@tcp(database:3306)/golang_docker?parseTime=true"
+	gDb, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+
 	if err != nil {
 		fmt.Println(err)
 		panic(errors.New("Error connecting to mysql"))
 	}
 	fmt.Println("Database connected!")
 
+	db, errGetDb := gDb.DB()
+
+	if errGetDb != nil {
+		fmt.Println(err)
+		panic(errors.New("Error getting DB from gorm"))
+	}
+
 	errPing := db.Ping()
 	if errPing != nil {
 		fmt.Println(errPing)
 	}
-	createUserTable(db)
-	addMockData(db)
+	setupDatabase(gDb)
+	addMockData(gDb)
 	dbChannel <- db
+	gdbChannel <- gDb
 	return db
 }
 
-func createUserTable(db *sql.DB) error {
-	fmt.Println("Creating table...")
-	query := "CREATE TABLE IF NOT EXISTS users(id int primary key AUTO_INCREMENT, city varchar(255), email varchar(255), first_name varchar(255), name varchar(255), password varchar(255), street varchar(255), houseNumber varchar(255), username varchar(255), created_at datetime default CURRENT_TIMESTAMP, updated_at datetime default CURRENT_TIMESTAMP)"
-	fmt.Println("Sending Command!")
-	res, err := db.Exec(query)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	fmt.Println("Command sended!")
-	rows, err := res.RowsAffected()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	fmt.Printf("Rows affected when creating table: %d\n", rows)
-	return nil
+func setupDatabase(db *gorm.DB) {
+	db.AutoMigrate(&dataStructures.User{})
+	db.AutoMigrate(&dataStructures.Skill{})
 }
 
-func addMockData(db *sql.DB) {
-	err := crud.AddUser(&mockData.UserData[0], db)
+func addMockData(db *gorm.DB) {
+	_, err := dbInterface.CreateUser(db, &mockData.UserData[0])
 	if err != nil {
 		log.Fatal(err)
 	}
