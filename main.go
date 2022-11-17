@@ -26,12 +26,12 @@ func main() {
 	defer db.Close()
 
 	router := gin.Default()
-	router.GET("/profile", controllers.GetAllProfiles(gdb))
-	router.GET("/profile/:id", controllers.GetProfileById(gdb))
+	router.GET("/profile", middleware.RequireAuth, controllers.GetAllProfiles(gdb))
+	router.GET("/profile/:id", middleware.RequireAuth, controllers.GetProfileById(gdb))
 	router.GET("/skill", controllers.GetAllSkills(gdb))
 	router.GET("/validate", middleware.RequireAuth, controllers.ValidateJWT(gdb))
 	router.PUT("/signUp", controllers.CreateProfile(gdb))
-	router.PUT("/skill", controllers.CreateSkill(gdb))
+	router.PUT("/skill", middleware.RequireAuth, controllers.CreateSkill(gdb))
 	router.PUT("/login", controllers.LoginUser(gdb))
 	router.Run("0.0.0.0:8080")
 }
