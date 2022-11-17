@@ -18,7 +18,6 @@ func RequireAuth(context *gin.Context) {
 		return
 	}
 	authorization := strings.TrimPrefix(header, "Bearer ")
-	fmt.Println(authorization)
 
 	token, err := jwt.Parse(authorization, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
@@ -43,7 +42,7 @@ func RequireAuth(context *gin.Context) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if time.Now().Unix() > claims["exp"].(int64) {
+		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			context.AbortWithStatus(http.StatusUnauthorized)
 		}
 	} else {
