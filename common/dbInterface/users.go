@@ -1,6 +1,7 @@
 package dbInterface
 
 import (
+	"errors"
 	"fmt"
 
 	"app/matchingAppProfileService/common/dataStructures"
@@ -41,4 +42,17 @@ func GetUserById(db *gorm.DB, id string) (*[]dataStructures.User, error) {
 		return nil, err
 	}
 	return &users, nil
+}
+
+func GetUserByEmail(db *gorm.DB, email string) (*dataStructures.User, error) {
+	var user dataStructures.User
+
+	err := db.Model(&dataStructures.User{}).Where("Email=?", email).First(&user).Error
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, errors.New("No User found for this email")
+	}
+
+	return &user, nil
 }

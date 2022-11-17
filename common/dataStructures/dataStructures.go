@@ -4,11 +4,6 @@ import (
 	"time"
 )
 
-type Profile struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
 type User struct {
 	ID          uint      `json:"id" gorm:"primaryKey"`
 	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
@@ -22,6 +17,7 @@ type User struct {
 	Street      string    `json:"street"`
 	HouseNumber string    `json:"houseNumber"`
 	Username    string    `json:"username"`
+	Gender      string    `json:"gender"`
 	Skills      []*Skill  `json:"skills" gorm:"many2many:user_skills"`
 }
 

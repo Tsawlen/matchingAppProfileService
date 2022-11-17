@@ -1,4 +1,4 @@
-package query
+package controllers
 
 import (
 	"app/matchingAppProfileService/common/dataStructures"
@@ -16,6 +16,7 @@ func GetAllSkills(db *gorm.DB) gin.HandlerFunc {
 		skills, err := dbInterface.GetAllSkills(db)
 		if err != nil {
 			context.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
 		context.IndentedJSON(http.StatusOK, &skills)
 	}
@@ -28,11 +29,13 @@ func CreateSkill(db *gorm.DB) gin.HandlerFunc {
 		if err := context.BindJSON(&newSkill); err != nil {
 			fmt.Println(err)
 			context.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
 		skill, errCreate := dbInterface.CreateSkill(db, &newSkill)
 		if errCreate != nil {
 			fmt.Println(errCreate)
 			context.AbortWithError(http.StatusInternalServerError, errCreate)
+			return
 		}
 		context.IndentedJSON(http.StatusCreated, &skill)
 	}
