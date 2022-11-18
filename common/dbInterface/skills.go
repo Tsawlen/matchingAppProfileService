@@ -43,20 +43,24 @@ func GetSkillById(db *gorm.DB, id string) (*dataStructures.Skill, error) {
 func GetUsersBySkill(db *gorm.DB, id string) ([]*dataStructures.User, error) {
 	var skill *dataStructures.Skill
 
-	err := db.Model(&dataStructures.Skill{}).Preload("Users").Where("id=?", id).First(&skill).Error
+	err := db.Model(&dataStructures.Skill{}).Preload("UsersAchieved").Where("id=?", id).First(&skill).Error
 	if err != nil {
 		return nil, err
 	}
-	if len(skill.Users) <= 0 {
+	if len(skill.UsersAchieved) <= 0 {
 		return nil, errors.New("No Users for this skill found!")
 	}
-	return skill.Users, nil
+	return skill.UsersAchieved, nil
 }
 
 func DeleteSkill(db *gorm.DB, skill *dataStructures.Skill) error {
-	errAssocClear := db.Model(&skill).Association("Users").Clear()
-	if errAssocClear != nil {
-		return errAssocClear
+	errAssocClearSearch := db.Model(&skill).Association("UsersSearching").Clear()
+	errAssocClearAchieved := db.Model(&skill).Association("UsersAchieved").Clear()
+	if errAssocClearSearch != nil {
+		return errAssocClearSearch
+	}
+	if errAssocClearAchieved != nil {
+		return errAssocClearAchieved
 	}
 	result := db.Delete(&skill)
 	if result.Error != nil {

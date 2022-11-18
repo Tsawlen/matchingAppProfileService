@@ -7,6 +7,7 @@ import (
 	"app/matchingAppProfileService/common/dataStructures"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func CreateUser(db *gorm.DB, user *dataStructures.User) (*dataStructures.User, error) {
@@ -22,7 +23,7 @@ func CreateUser(db *gorm.DB, user *dataStructures.User) (*dataStructures.User, e
 func GetAllUsersNew(db *gorm.DB) (*[]dataStructures.User, error) {
 	var users []dataStructures.User
 
-	err := db.Model(&dataStructures.User{}).Preload("Skills").Find(&users).Error
+	err := db.Model(&dataStructures.User{}).Preload(clause.Associations).Find(&users).Error
 
 	if err != nil {
 		fmt.Println(err)
@@ -35,7 +36,7 @@ func GetAllUsersNew(db *gorm.DB) (*[]dataStructures.User, error) {
 func GetUserById(db *gorm.DB, id string) (*dataStructures.User, error) {
 	var users dataStructures.User
 
-	err := db.Model(&dataStructures.User{}).Preload("Skills").Where("id=?", id).Find(&users).Error
+	err := db.Model(&dataStructures.User{}).Preload(clause.Associations).Where("id=?", id).Find(&users).Error
 
 	if err != nil {
 		fmt.Println(err)
@@ -75,10 +76,15 @@ func UpdateUser(db *gorm.DB, userId string, newData *dataStructures.User) (*data
 }
 
 func DeleteUser(db *gorm.DB, user *dataStructures.User) error {
-	errAssocClear := db.Model(&user).Association("Skills").Clear()
+	errAssocClearSearch := db.Model(&user).Association("SearchedSkills").Clear()
+	errAssocClearAchieved := db.Model(&user).Association("AchievedSkills").Clear()
 
-	if errAssocClear != nil {
-		return errAssocClear
+	if errAssocClearSearch != nil {
+		return errAssocClearSearch
+	}
+
+	if errAssocClearAchieved != nil {
+		return errAssocClearAchieved
 	}
 
 	result := db.Delete(&user)
@@ -92,10 +98,22 @@ func DeleteUser(db *gorm.DB, user *dataStructures.User) error {
 // Helper Functions
 
 func updateValuesForUser(oldUser *dataStructures.User, newUser *dataStructures.User, db *gorm.DB) *dataStructures.User {
-	if newUser.Skills != nil {
-		errAssocClear := db.Model(&oldUser).Association("Skills").Clear()
+	if newUser.SearchedSkills != nil {
+		errAssocClear := db.Model(&oldUser).Association("SearchedSkills").Clear()
 		if errAssocClear != nil {
-			fmt.Println("Could not delete Skills!")
+			fmt.Println("Could not delete searched skills!")
+		}
+	}
+	if newUser.AchievedSkills != nil {
+		errAssocClear := db.Model(&oldUser).Association("AchievedSkills").Clear()
+		if errAssocClear != nil {
+			fmt.Println("Could not delete achieved skills!")
+		}
+	}
+	if newUser.City != nil {
+		errAssocClear := db.Model(&oldUser).Association("City").Clear()
+		if errAssocClear != nil {
+			fmt.Println("Could not delete city!")
 		}
 	}
 	oldUser.City = newUser.City
@@ -104,6 +122,8 @@ func updateValuesForUser(oldUser *dataStructures.User, newUser *dataStructures.U
 	oldUser.Street = newUser.Street
 	oldUser.HouseNumber = newUser.HouseNumber
 	oldUser.Gender = newUser.Gender
-	oldUser.Skills = newUser.Skills
+	oldUser.SearchedSkills = newUser.SearchedSkills
+	oldUser.AchievedSkills = newUser.AchievedSkills
+	oldUser.City = newUser.City
 	return oldUser
 }

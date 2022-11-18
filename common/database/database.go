@@ -4,11 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 
 	"app/matchingAppProfileService/common/dataStructures"
-	"app/matchingAppProfileService/common/dbInterface"
-	"app/matchingAppProfileService/common/mockData"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -45,11 +42,5 @@ func InitalizeConnection(dbChannel chan *sql.DB, gdbChannel chan *gorm.DB) *sql.
 func setupDatabase(db *gorm.DB) {
 	db.AutoMigrate(&dataStructures.User{})
 	db.AutoMigrate(&dataStructures.Skill{})
-}
-
-func addMockData(db *gorm.DB) {
-	_, err := dbInterface.CreateUser(db, &mockData.UserData[0])
-	if err != nil {
-		log.Fatal(err)
-	}
+	db.AutoMigrate(&dataStructures.City{})
 }
