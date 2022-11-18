@@ -41,3 +41,46 @@ func CreateSkill(db *gorm.DB) gin.HandlerFunc {
 	}
 	return gin.HandlerFunc(handler)
 }
+
+func DeleteSkill(db *gorm.DB) gin.HandlerFunc {
+	handler := func(context *gin.Context) {
+		skillId := context.Param("id")
+
+		skillToDelete, findErr := dbInterface.GetSkillById(db, skillId)
+		if findErr != nil {
+			context.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"error": "Skill with id " + skillId + " not found!",
+			})
+			return
+		}
+
+		deleteErr := dbInterface.DeleteSkill(db, skillToDelete)
+		if deleteErr != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": deleteErr,
+			})
+			return
+		}
+
+		context.JSON(http.StatusOK, gin.H{
+			"message": "Skill with id " + skillId + " deleted!",
+		})
+
+	}
+	return gin.HandlerFunc(handler)
+}
+
+func GetUsersBySkill(db *gorm.DB) gin.HandlerFunc {
+	handler := func(context *gin.Context) {
+		id := context.Param("id")
+		users, err := dbInterface.GetUsersBySkill(db, id)
+		if err != nil {
+			context.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"error": err,
+			})
+			return
+		}
+		context.JSON(http.StatusFound, users)
+	}
+	return gin.HandlerFunc(handler)
+}

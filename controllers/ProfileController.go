@@ -147,6 +147,62 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 	return gin.HandlerFunc(handler)
 }
 
+func DeleteUser(db *gorm.DB) gin.HandlerFunc {
+	handler := func(context *gin.Context) {
+		var toFind struct {
+			Email string
+		}
+		errExtract := context.Bind(&toFind)
+		if errExtract != nil {
+			context.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+
+		userToDelete, errFind := dbInterface.GetUserByEmail(db, toFind.Email)
+		if errFind != nil {
+			context.AbortWithError(http.StatusNotFound, errFind)
+			return
+		}
+
+		if errDelete := dbInterface.DeleteUser(db, userToDelete); errDelete != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": errDelete,
+			})
+			return
+		}
+
+		context.JSON(http.StatusOK, gin.H{
+			"message": "User deleted!",
+		})
+	}
+	return gin.HandlerFunc(handler)
+}
+
+func UpdateUser(db *gorm.DB) gin.HandlerFunc {
+	handler := func(context *gin.Context) {
+		var newData *dataStructures.User
+		var userId = context.Param("id")
+		errBind := context.BindJSON(&newData)
+		if errBind != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": errBind,
+			})
+			return
+		}
+
+		updatedUser, errUpdate := dbInterface.UpdateUser(db, userId, newData)
+		if errUpdate != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": errBind,
+			})
+			return
+		}
+		context.JSON(http.StatusOK, updatedUser)
+
+	}
+	return gin.HandlerFunc(handler)
+}
+
 func ValidateJWT(db *gorm.DB) gin.HandlerFunc {
 	handler := func(context *gin.Context) {
 		context.JSON(http.StatusOK, gin.H{
