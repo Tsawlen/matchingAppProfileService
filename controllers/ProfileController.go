@@ -113,8 +113,9 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 		// Generate jwt token
 
 		token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-			"sub": requestedUser.ID,
-			"exp": time.Now().Add(3 * time.Hour).Unix(),
+			"sub":  requestedUser.ID,
+			"exp":  time.Now().Add(3 * time.Hour).Unix(),
+			"user": requestedUser.ID,
 		})
 
 		// Get RSA private key

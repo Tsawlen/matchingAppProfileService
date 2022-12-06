@@ -10,12 +10,13 @@ type User struct {
 	UpdatedAt       time.Time `json:"updated_at" gorm:"autoUpdatedTime"`
 	First_name      string    `json:"firstName"`
 	Name            string    `json:"name"`
-	Gender          string    `json:"gender"`
+	Gender          uint      `json:"gender"`
 	Username        string    `json:"username"`
 	Email           string    `json:"email"`
 	Street          string    `json:"street"`
 	HouseNumber     string    `json:"houseNumber"`
 	TelephoneNumber string    `json:"telephoneNumber"`
+	Price           float64   `json:"price"`
 	ProfilPicture   []byte    `json:"profilePicture"`
 	Confirmed       bool      `json:"confirmed"`
 	Active          bool      `json:"active"`
@@ -46,4 +47,11 @@ type City struct {
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdatedTime"`
 	Place     string    `json:"place"`
+}
+
+// DAO
+
+type UserFilter struct {
+	Gender uint    `json:"gender"`
+	Price  float64 `json:"price"`
 }
