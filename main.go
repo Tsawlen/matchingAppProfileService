@@ -10,6 +10,7 @@ import (
 	"app/matchingAppProfileService/controllers"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
@@ -17,11 +18,17 @@ import (
 func main() {
 	dbChannel := make(chan *sql.DB)
 	gdbChannel := make(chan *gorm.DB)
+	redisChannel := make(chan *redis.Client)
+	finishedInit := make(chan bool)
+
+	go initializer.LoadEnvVariables(finishedInit)
+	<-finishedInit
 	go database.InitalizeConnection(dbChannel, gdbChannel)
-	go initializer.LoadEnvVariables()
+	go database.InitRedis(redisChannel)
 
 	db := <-dbChannel
 	gdb := <-gdbChannel
+	redis := <-redisChannel
 
 	defer db.Close()
 
@@ -34,9 +41,10 @@ func main() {
 	router.GET("/skill/:id/users", middleware.RequireAuth, controllers.GetUsersBySkill(gdb))
 
 	// Put Requests
-	router.PUT("/signUp", controllers.CreateProfile(gdb))
+	router.PUT("/signUp", controllers.CreateProfile(gdb, redis))
 	router.PUT("/skill", middleware.RequireAuth, controllers.CreateSkill(gdb))
 	router.PUT("/login", controllers.LoginUser(gdb))
+	router.PUT("/activate/:id", controllers.ActivateUser(redis, gdb))
 
 	// Update Requests
 	router.PUT("/profile/:id", middleware.RequireAuth, controllers.UpdateUser(gdb))
