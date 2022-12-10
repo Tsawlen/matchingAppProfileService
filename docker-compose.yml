@@ -27,3 +27,11 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - '6380:6379'
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379

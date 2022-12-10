@@ -4,15 +4,19 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"os"
+	"strconv"
 
 	"app/matchingAppProfileService/common/dataStructures"
 
+	"github.com/go-redis/redis"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 func InitalizeConnection(dbChannel chan *sql.DB, gdbChannel chan *gorm.DB) *sql.DB {
-	dsn := "root:root@tcp(0.0.0.0:3306)/golang_docker?parseTime=true"
+	dsn := "root:root@tcp(" + os.Getenv("MYSQL_HOST") + ")/golang_docker?parseTime=true"
 	gDb, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -43,4 +47,23 @@ func setupDatabase(db *gorm.DB) {
 	db.AutoMigrate(&dataStructures.User{})
 	db.AutoMigrate(&dataStructures.Skill{})
 	db.AutoMigrate(&dataStructures.City{})
+}
+
+// Redis
+
+func InitRedis(redisChannel chan *redis.Client) {
+	dbInt, errInt := strconv.Atoi(os.Getenv("REDIS_DB"))
+	if errInt != nil {
+		log.Fatal("REDIS_DB needs to be an integer value")
+	}
+	client := redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_IP"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       dbInt,
+	})
+	if err := client.Ping().Err(); err != nil {
+		log.Fatal("No connection to Redis possible")
+	}
+	redisChannel <- client
+
 }

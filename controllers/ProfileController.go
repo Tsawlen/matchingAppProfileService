@@ -4,6 +4,7 @@ import (
 	"app/matchingAppProfileService/common/dataStructures"
 	"app/matchingAppProfileService/common/dbInterface"
 	"app/matchingAppProfileService/common/security"
+	"app/matchingAppProfileService/publish"
 
 	"fmt"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"github.com/golang-jwt/jwt/v4"
 	"gorm.io/gorm"
 )
@@ -27,7 +29,7 @@ func GetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 	return gin.HandlerFunc(handler)
 }
 
-func CreateProfile(db *gorm.DB) gin.HandlerFunc {
+func CreateProfile(db *gorm.DB, redis *redis.Client) gin.HandlerFunc {
 	handler := func(context *gin.Context) {
 		var newUser dataStructures.User
 		if err := context.BindJSON(&newUser); err != nil {
@@ -42,15 +44,78 @@ func CreateProfile(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
+		newUser.Confirmed = false
+		newUser.Active = false
 		userToReturn, errCreate := dbInterface.CreateUser(db, &newUser)
 		if errCreate != nil {
 			fmt.Println(errCreate)
 			context.AbortWithError(http.StatusInternalServerError, errCreate)
 			return
 		}
+		signUpCode := dbInterface.CreateAndSaveSignupCode(redis, userToReturn.ID)
+		publish.PublishRegister(userToReturn.ID, signUpCode)
 		context.IndentedJSON(http.StatusOK, userToReturn)
 	}
 
+	return gin.HandlerFunc(handler)
+}
+
+func ActivateUser(redis *redis.Client, db *gorm.DB) gin.HandlerFunc {
+	handler := func(context *gin.Context) {
+		type activateObject struct {
+			Code string `json:"code"`
+		}
+		var obj activateObject
+		if err := context.BindJSON(&obj); err != nil {
+			fmt.Println(err)
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "The activation code has to be an string",
+			})
+			return
+		}
+		id := context.Param("id")
+		user, err := dbInterface.GetUserById(db, id)
+		if err != nil {
+			context.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		activateCode, errCode := dbInterface.GetSignUpCode(redis, user.ID)
+		if errCode != nil {
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "This activation code is no longer valid! Request a new one!",
+			})
+			return
+		}
+		if activateCode == "" {
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "This activation code is no longer valid! Request a new one!",
+			})
+			return
+		}
+		if obj.Code != activateCode {
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "Invalid activation code!",
+			})
+			return
+		}
+		ok, errActivate := dbInterface.ActivateUser(user.ID, db)
+		if errActivate != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": errActivate,
+			})
+			return
+		}
+		if !ok {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "An unkown error has occured!",
+			})
+			return
+		}
+		publish.PublishSignUp(user.ID)
+		context.JSON(http.StatusOK, gin.H{
+			"message": "User activated!",
+		})
+	}
 	return gin.HandlerFunc(handler)
 }
 
@@ -97,6 +162,15 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 		if errReq != nil {
 			context.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "Invalid email or password!",
+			})
+			return
+		}
+
+		// Is user activated?
+
+		if !requestedUser.Active {
+			context.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "This account has yet to be activated!",
 			})
 			return
 		}

@@ -1,11 +1,17 @@
 package dbInterface
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"log"
+	"math/big"
+	"strconv"
+	"time"
 
 	"app/matchingAppProfileService/common/dataStructures"
 
+	"github.com/go-redis/redis"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -95,7 +101,45 @@ func DeleteUser(db *gorm.DB, user *dataStructures.User) error {
 	return nil
 }
 
+func ActivateUser(userId uint, db *gorm.DB) (bool, error) {
+	res := db.Model(&dataStructures.User{}).Where("id = ?", userId).Update("confirmed", 1)
+	res2 := db.Model(&dataStructures.User{}).Where("id = ?", userId).Update("active", 1)
+	if res.Error != nil {
+		return false, res.Error
+	}
+	if res2.Error != nil {
+		return false, res2.Error
+	}
+	return true, nil
+}
+
+func CreateAndSaveSignupCode(redis *redis.Client, userId uint) string {
+	SignupCode := generateRandomInt() + generateRandomInt() + generateRandomInt() + generateRandomInt() + generateRandomInt() + generateRandomInt()
+	res := redis.Set("Code"+strconv.Itoa(int(userId)), SignupCode, time.Minute*15)
+	if res.Err() != nil {
+		log.Println(res.Err())
+	}
+	return SignupCode
+}
+
+func GetSignUpCode(redis *redis.Client, userId uint) (string, error) {
+	query := "Code" + strconv.Itoa(int(userId))
+	res := redis.Get(query)
+	if res.Err() != nil {
+		return "", res.Err()
+	}
+	return res.Val(), nil
+}
+
 // Helper Functions
+
+func generateRandomInt() string {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(10))
+	if err != nil {
+		log.Println("Generation of random int failed!")
+	}
+	return nBig.String()
+}
 
 func updateValuesForUser(oldUser *dataStructures.User, newUser *dataStructures.User, db *gorm.DB) *dataStructures.User {
 	if newUser.SearchedSkills != nil {
@@ -117,6 +161,7 @@ func updateValuesForUser(oldUser *dataStructures.User, newUser *dataStructures.U
 		}
 	}
 	oldUser.City = newUser.City
+	oldUser.Price = newUser.Price
 	oldUser.First_name = newUser.First_name
 	oldUser.Name = newUser.Name
 	oldUser.Street = newUser.Street
