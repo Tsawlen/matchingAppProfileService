@@ -160,6 +160,9 @@ func updateValuesForUser(oldUser *dataStructures.User, newUser *dataStructures.U
 			fmt.Println("Could not delete city!")
 		}
 	}
+	if newUser.Password != "" {
+		oldUser.Password = newUser.Password
+	}
 	oldUser.City = newUser.City
 	oldUser.Price = newUser.Price
 	oldUser.First_name = newUser.First_name

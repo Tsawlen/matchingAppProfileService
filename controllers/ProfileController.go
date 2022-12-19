@@ -34,7 +34,9 @@ func CreateProfile(db *gorm.DB, redis *redis.Client) gin.HandlerFunc {
 		var newUser dataStructures.User
 		if err := context.BindJSON(&newUser); err != nil {
 			fmt.Println(err)
-			context.AbortWithError(http.StatusInternalServerError, err)
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "Corrupted Data send!",
+			})
 			return
 		}
 		if _, err := dbInterface.GetUserByEmail(db, newUser.Email); err == nil {
@@ -49,7 +51,9 @@ func CreateProfile(db *gorm.DB, redis *redis.Client) gin.HandlerFunc {
 		userToReturn, errCreate := dbInterface.CreateUser(db, &newUser)
 		if errCreate != nil {
 			fmt.Println(errCreate)
-			context.AbortWithError(http.StatusInternalServerError, errCreate)
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "User could not be created.",
+			})
 			return
 		}
 		signUpCode := dbInterface.CreateAndSaveSignupCode(redis, userToReturn.ID)
@@ -168,12 +172,12 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 
 		// Is user activated?
 
-		if !requestedUser.Active {
+		/*if !requestedUser.Active {
 			context.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "This account has yet to be activated!",
 			})
 			return
-		}
+		}*/
 
 		// Compare sent passhash with saved passhash
 
