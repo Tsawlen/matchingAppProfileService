@@ -1,16 +1,46 @@
 package security
 
 import (
+	"app/matchingAppProfileService/common/dataStructures"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 var privateKey *rsa.PrivateKey
 var publicKey *rsa.PublicKey
+
+func GenerateJWT(requestedUser *dataStructures.User) (string, error) {
+
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"sub":  requestedUser.ID,
+		"exp":  time.Now().Add(3 * time.Hour).Unix(),
+		"user": requestedUser.ID,
+	})
+
+	// Get RSA private key
+
+	key, errGetKey := GetPrivateToken()
+
+	if errGetKey != nil {
+		return "", errGetKey
+	}
+
+	// Sign the token
+	tokenString, errSign := token.SignedString(key)
+
+	if errSign != nil {
+		return "", errSign
+	}
+
+	return tokenString, nil
+}
 
 func GetPrivateToken() (*rsa.PrivateKey, error) {
 

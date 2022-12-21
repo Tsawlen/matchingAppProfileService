@@ -1,6 +1,8 @@
 package main
 
 import (
+	//"flag"
+
 	"database/sql"
 
 	"app/matchingAppProfileService/common/database"
@@ -16,6 +18,11 @@ import (
 )
 
 func main() {
+
+	/*certificateFile := flag.String("certfile", "certificates/cert.pem", "certificate PEM file")
+	keyFile := flag.String("keyfile", "certificates/key.pem", "key PEM file")
+	flag.Parse()*/
+
 	dbChannel := make(chan *sql.DB)
 	gdbChannel := make(chan *gorm.DB)
 	redisChannel := make(chan *redis.Client)

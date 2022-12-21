@@ -9,11 +9,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
-	"github.com/golang-jwt/jwt/v4"
 	"gorm.io/gorm"
 )
 
@@ -116,8 +113,15 @@ func ActivateUser(redis *redis.Client, db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		publish.PublishSignUp(user.ID)
+		jwtString, errJWT := security.GenerateJWT(user)
+		if errJWT != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Could not generate access token",
+			})
+		}
 		context.JSON(http.StatusOK, gin.H{
 			"message": "User activated!",
+			"token":   jwtString,
 		})
 	}
 	return gin.HandlerFunc(handler)
@@ -189,38 +193,15 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Generate jwt token
-
-		token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-			"sub":  requestedUser.ID,
-			"exp":  time.Now().Add(3 * time.Hour).Unix(),
-			"user": requestedUser.ID,
-		})
-
-		// Get RSA private key
-
-		key, errGetKey := security.GetPrivateToken()
-
-		if errGetKey != nil {
-			fmt.Println(errGetKey)
-			context.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Failed to create token",
+		jwtString, err := security.GenerateJWT(requestedUser)
+		if err != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": err,
 			})
-			return
-		}
-
-		// Sign the token
-		tokenString, errSign := token.SignedString(key)
-
-		if errSign != nil {
-			fmt.Println(errSign)
-			context.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Failed to create token",
-			})
-			return
 		}
 		// Send the jwt token
 		context.IndentedJSON(http.StatusOK, gin.H{
-			"token": tokenString,
+			"token": jwtString,
 		})
 	}
 	return gin.HandlerFunc(handler)
