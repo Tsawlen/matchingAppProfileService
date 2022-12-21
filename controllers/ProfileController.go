@@ -176,12 +176,12 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 
 		// Is user activated?
 
-		/*if !requestedUser.Active {
+		if !requestedUser.Active {
 			context.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "This account has yet to be activated!",
 			})
 			return
-		}*/
+		}
 
 		// Compare sent passhash with saved passhash
 
