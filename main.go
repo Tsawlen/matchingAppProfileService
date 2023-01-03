@@ -46,12 +46,15 @@ func main() {
 	router.GET("/skill", controllers.GetAllSkills(gdb))
 	router.GET("/validate", middleware.RequireAuth, controllers.ValidateJWT(gdb))
 	router.GET("/skill/:id/users", middleware.RequireAuth, controllers.GetUsersBySkill(gdb))
+	router.GET("/skillLevel/:id", middleware.RequireAuth, controllers.GetSkillLevelById(gdb))
+	router.GET("/skillLevel", middleware.RequireAuth, controllers.GetAllSkillLevels(gdb))
 
 	// Put Requests
 	router.PUT("/signUp", controllers.CreateProfile(gdb, redis))
 	router.PUT("/skill", middleware.RequireAuth, controllers.CreateSkill(gdb))
 	router.PUT("/login", controllers.LoginUser(gdb))
 	router.PUT("/activate/:id", controllers.ActivateUser(redis, gdb))
+	router.PUT("/skillLevel", middleware.RequireAuth, controllers.CreateSkillLevel(gdb))
 
 	// Update Requests
 	router.PUT("/profile/:id", middleware.RequireAuth, controllers.UpdateUser(gdb))

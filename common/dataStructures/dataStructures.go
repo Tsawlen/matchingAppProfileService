@@ -28,13 +28,19 @@ type User struct {
 }
 
 type Skill struct {
-	ID             uint      `json:"id" gorm:"primaryKey"`
-	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdatedTime"`
-	Name           string    `json:"name"`
-	Level          string    `json:"level"`
-	UsersSearching []*User   `json:"usersSearching" gorm:"many2many:user_searchedSkills"`
-	UsersAchieved  []*User   `json:"usersAchieved" gorm:"many2many:user_achievedSkills"`
+	ID              uint      `json:"id" gorm:"primaryKey"`
+	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt       time.Time `json:"updated_at" gorm:"autoUpdatedTime"`
+	Name            string    `json:"name"`
+	SkillIdentifier int
+	SkillLevel      *SkillLevel `json:"skillLevel" gorm:"foreignKey:SkillIdentifier"`
+	UsersSearching  []*User     `json:"usersSearching" gorm:"many2many:user_searchedSkills"`
+	UsersAchieved   []*User     `json:"usersAchieved" gorm:"many2many:user_achievedSkills"`
+}
+
+type SkillLevel struct {
+	ID   int    `json:"id" gorm:"primaryKey"`
+	Name string `json:"name"`
 }
 
 type RemoveSkill struct {

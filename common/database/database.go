@@ -47,6 +47,7 @@ func setupDatabase(db *gorm.DB) {
 	db.AutoMigrate(&dataStructures.User{})
 	db.AutoMigrate(&dataStructures.Skill{})
 	db.AutoMigrate(&dataStructures.City{})
+	db.AutoMigrate(&dataStructures.SkillLevel{})
 }
 
 // Redis
