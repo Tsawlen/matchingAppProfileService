@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  web:
+    image: profileservice:latest
+    ports:
+      - 8080:8080
+    container_name: profile-service
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - 'DB_PORT=3306'
+      - 'DB_HOST=database'
+  database:
+    image: mysql:5.7.22
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: golang_docker
+    container_name: profile-service-db
+    ports:
+      - 3306:3306
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - '6380:6379'
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+  

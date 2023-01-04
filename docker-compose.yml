@@ -1,19 +1,18 @@
 version: '3'
 
 services:
-  web:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+  profileservice:
+    image: profileservice:latest
     ports:
       - 8080:8080
-    container_name: golang-profile-service
+    container_name: profile-service
     depends_on:
       database:
         condition: service_healthy
     environment:
-      - 'DB_PORT=3306'
-      - 'DB_HOST=database'
+      - 'MYSQL_HOST=database:3306'
+      - 'REDIS_IP=redis:6379'
+      - 'CLOUD_RELAY_PUB=http://cloudRelay:8082/publish'
   database:
     image: mysql:5.7.22
     environment:
@@ -25,7 +24,7 @@ services:
       - 3306:3306
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
+      timeout: 10s
       retries: 10
   redis:
     image: redis:latest
@@ -35,3 +34,42 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+  emailService:
+    image: seyna-email-service:latest
+    container_name: email-service
+    environment:
+      - 'PROFILE_SERVICE_HOST=http://profileservice:8080'
+      - 'CLOUD_RELAY_HOST=cloudRelay:8082'
+    depends_on:
+      - "cloudRelay"
+  cloudRelay:
+    image: cloudrelay:latest
+    container_name: cloudRelay
+    ports:
+      - 8082:8082
+  invoiceService:
+    image: invoice-service:latest
+    ports:
+      - 8085:8085
+    container_name: invoice-service
+    depends_on:
+      invoicedb:
+        condition: service_healthy
+    environment:
+      - 'DB_HOST=invoicedb:3307'
+  invoicedb:
+    image: mysql:5.7.22
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: invoices
+      MYSQL_TCP_PORT: 3307
+    container_name: invoice-service-db
+    ports:
+      - 3307:3307
+    expose:
+      - 3307
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
