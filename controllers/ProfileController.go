@@ -168,8 +168,8 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 		requestedUser, errReq := dbInterface.GetUserByEmail(db, requestBody.Email)
 
 		if errReq != nil {
-			context.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Invalid email or password!",
+			context.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"error": "No user with this email / password found!",
 			})
 			return
 		}
@@ -202,6 +202,7 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 		// Send the jwt token
 		context.IndentedJSON(http.StatusOK, gin.H{
 			"token": jwtString,
+			"user":  requestedUser,
 		})
 	}
 	return gin.HandlerFunc(handler)

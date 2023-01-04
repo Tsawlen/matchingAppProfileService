@@ -163,13 +163,33 @@ func updateValuesForUser(oldUser *dataStructures.User, newUser *dataStructures.U
 	if newUser.Password != "" {
 		oldUser.Password = newUser.Password
 	}
-	oldUser.City = newUser.City
-	oldUser.Price = newUser.Price
-	oldUser.First_name = newUser.First_name
-	oldUser.Name = newUser.Name
-	oldUser.Street = newUser.Street
-	oldUser.HouseNumber = newUser.HouseNumber
-	oldUser.Gender = newUser.Gender
+	if (newUser.City != &dataStructures.City{} && newUser.City != oldUser.City) {
+		oldUser.City = newUser.City
+	}
+	if newUser.Price != 0 && newUser.Price != oldUser.Price {
+		oldUser.Price = newUser.Price
+	}
+	if newUser.First_name != "" && newUser.First_name != oldUser.First_name {
+		oldUser.First_name = newUser.First_name
+	}
+	if newUser.Name != "" && newUser.Name != oldUser.Name {
+		oldUser.Name = newUser.Name
+	}
+	if newUser.Street != "" && newUser.Street != oldUser.Street {
+		oldUser.Street = newUser.Street
+	}
+	if newUser.HouseNumber != "" && newUser.HouseNumber != oldUser.HouseNumber {
+		oldUser.HouseNumber = newUser.HouseNumber
+	}
+	if newUser.Gender != oldUser.Gender {
+		oldUser.Gender = newUser.Gender
+	}
+	if newUser.TelephoneNumber != "" && newUser.TelephoneNumber != oldUser.TelephoneNumber {
+		oldUser.TelephoneNumber = newUser.TelephoneNumber
+	}
+	if newUser.ProfilPicture != nil {
+		oldUser.ProfilPicture = newUser.ProfilPicture
+	}
 	oldUser.SearchedSkills = newUser.SearchedSkills
 	oldUser.AchievedSkills = newUser.AchievedSkills
 	oldUser.City = newUser.City
